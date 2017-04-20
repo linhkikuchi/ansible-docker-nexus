@@ -1,0 +1,25 @@
+---
+- name: upgrade all packages
+  yum: name=* state=latest
+
+- name: Disable SELinux
+  selinux: state=disabled
+  tags:
+  - setup
+
+
+- name: EPEL repo
+  raw: rpm -q /epel-release-latest-7 || rpm -U --replacepkgs https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+  tags:
+  - setup
+
+- name: install curl, git, httpd, mod_ssl, java
+  yum2: name="{{ item }}" state=latest
+  with_items:
+    - curl
+    - git
+    - httpd
+    - mod_ssl
+    - java-1.8.0-openjdk-headless
+  tags:
+  - setup

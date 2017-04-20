@@ -1,0 +1,27 @@
+RewriteEngine On
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP_HOST} ^{{ dds_name }}
+RewriteRule ^/?(.*) https://%{SERVER_NAME}/$1 [R,L]
+<VirtualHost *:443>
+  ServerName {{ dds_name }}
+  Include conf/ssl-certs.inc
+  SSLProxyEngine On
+  ProxyRequests Off
+  ProxyPreserveHost On
+  SSLCompression Off
+  # POODLE and other stuff
+  SSLProtocol all -SSLv2 -SSLv3 -TLSv1
+  # Secure cypher suites
+  SSLCipherSuite EECDH+AESGCM:EDH+AESGCM:AES256+EECDH:AES256+EDH
+  SSLHonorCipherOrder on
+  RequestHeader set X-Forwarded-Proto "https"
+  ProxyPass /error/ !
+  # the nexus application is accesible on this url 
+  ProxyPass        / http://localhost:38081/
+  ProxyPassReverse / http://localhost:38081/
+  
+  # if you are reinstalling this then you need to install the docker
+  # registry via the nexus application and then set the port to 5000
+  ProxyPass        / http://localhost:5000/
+  ProxyPassReverse / http://localhost:5000/
+</VirtualHost>

@@ -1,0 +1,7 @@
+#!/bin/bash
+#
+# Use to set DOCKER env vars. Source from /etc/profile.d/docker.sh to set 
+# variable values on login.
+#
+export DOCKER_TLS_VERIFY=1
+export DOCKER_HOST=tcp://{{ dds_name }}:2376

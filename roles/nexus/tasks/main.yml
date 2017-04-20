@@ -1,0 +1,37 @@
+---
+
+- name: Copy the nexus.conf file
+  template: src=nexus.conf.j2 dest=/etc/httpd/conf.d/nexus.conf owner=root group=root mode=0644 backup=yes
+  notify:
+    - 'restart httpd'
+
+- name: Copy the ssl-certs.inc file for https conf
+  template: src=ssl-certs.inc.j2 dest=/etc/httpd/conf/ssl-certs.inc owner=root group=root mode=0644 backup=yes
+  notify:
+    - 'restart httpd'
+
+# to call handler before running the next task
+- meta: flush_handlers
+
+- name: set up a nexus-data directory to make volume for docker container
+  file: path=/nexus-data state=directory mode=700 group=root owner=200
+  tags:
+  - setup
+  - nexus-data
+
+- name: Start nexus docker container
+  docker_container:
+    name: "nexus3"
+    image: "sonatype/nexus3"
+    docker_host: "tcp://{{ dds_name }}:2376"
+    cert_path: "{{ dds_cert_path }}/cert.pem"
+    cacert_path: "{{ dds_cert_path }}/ca.pem"
+    key_path: "{{ dds_cert_path }}/key.pem"
+    tls_verify: yes
+    tls_hostname: "{{ dds_name }}"
+    restart_policy: always
+    ports:
+      - "38081:8081"
+      - "5000:5000"
+    volumes: 
+      - /nexus-data:/nexus-data

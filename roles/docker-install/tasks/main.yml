@@ -1,0 +1,48 @@
+---
+- include: setup.yml
+
+- name: disable firewalld
+  service: name=firewalld enabled=no state=stopped
+
+# follow instruction from offical docker website https://docs.docker.com/engine/installation/linux/centos/
+- name: remove unofficial Docker packages
+  yum: name={{item}} state=absent
+  with_items:
+    - docker-common
+    - container-selinux
+    - docker-selinux
+  tags:
+  - setup
+  - dockerrun
+
+#install docker from install package because docker repo hit error
+- name: install docker #use stable version
+  yum:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - https://yum.dockerproject.org/repo/main/centos/7/Packages/docker-engine-selinux-1.13.1-1.el7.centos.noarch.rpm
+    - https://yum.dockerproject.org/repo/main/centos/7/Packages/docker-engine-1.13.1-1.el7.centos.x86_64.rpm
+  tags:
+  - setup
+  - dockerrun
+
+- name: start docker
+  service: name=docker state=started enabled=yes
+  tags:
+  - setup
+  - dockerrun
+
+- name: install python-pip to install docker-py
+  yum: name=python-pip state=latest
+  tags:
+  - setup
+  - dockerrun
+
+- name: install docker-py
+  pip:
+    name: docker-py
+    state: present
+  tags:
+  - setup
+  - docker-py

@@ -1,0 +1,40 @@
+---
+- name: Create cert dir
+  file:
+    path: "{{ dds_cert_path }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Generate ca-key.pem
+  command: openssl genrsa -out ca-key.pem 4096
+  args:
+    chdir: "{{ dds_cert_path }}/"
+    creates: ca-key.pem
+
+- name: Generate ca certificate   
+  command: openssl req -new -nodes -x509 -days 9999 -key ca-key.pem -sha256 -out ca.pem  -subj '/C={{ dds_country }}/ST={{dds_state }}>/L={{ dds_locality }}/O={{ dds_organization }}/CN={{ dds_common_name }}'
+  args:
+    chdir: "{{ dds_cert_path }}/"
+    creates: ca.pem
+
+- include: generate_server_certs.yml
+- include: generate_client_certs.yml
+
+- name:  setting DOCKER env vars
+  template: src=docker_env.j2 dest=/etc/profile.d/docker.sh owner=root group=root mode=0644
+
+- name: add tsl config to docker daemon
+  lineinfile:
+    backrefs: yes
+    dest: "{{ docker_daemon_config }}"
+    regexp: '^ExecStart=/usr/bin/dockerd'
+    line: 'ExecStart=/usr/bin/dockerd --tlsverify --tlscacert={{ dds_cert_path }}/ca.pem --tlscert={{ dds_cert_path }}/server-cert.pem --tlskey={{ dds_cert_path }}/server-key.pem  -H=0.0.0.0:2376'
+    state: present
+  notify: 
+    - reload docker daemon
+    - restart docker service
+
+# to call handler before running the next task
+- meta: flush_handlers

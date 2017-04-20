@@ -1,0 +1,7 @@
+---
+dds_country: "{{ country_code }}"
+dds_state: "{{ city }}"
+dds_locality: "{{ city }}"
+dds_organization: "{{ org }}"
+dds_common_name: "{{ dds_name }}"   
+docker_daemon_config: /usr/lib/systemd/system/docker.service

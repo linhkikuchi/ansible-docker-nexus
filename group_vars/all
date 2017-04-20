@@ -1,0 +1,3 @@
+---
+dds_cert_path: /root/.docker
+docker_path: /var/docker
