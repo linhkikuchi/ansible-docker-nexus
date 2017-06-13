@@ -1,0 +1,13 @@
+- name: reload docker daemon
+  command: systemctl daemon-reload
+
+- name: restart docker service
+  service:
+    name: docker
+    state: restarted
+
+- name: restart httpd
+  service:
+    name: httpd
+    enabled: yes
+    state: restarted
