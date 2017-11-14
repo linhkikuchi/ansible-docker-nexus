@@ -8,27 +8,36 @@
 - name: remove unofficial Docker packages
   yum: name={{item}} state=absent
   with_items:
+    - docker
     - docker-common
-    - container-selinux
     - docker-selinux
+    - docker-engine
   tags:
   - setup
   - dockerrun
 
-#install docker from install package because docker repo hit error
-- name: install docker #use stable version
-  yum:
-    name: "{{ item }}"
-    state: present
+# install required packages
+- name: remove unofficial Docker packages
+  yum: name={{item}} state=present
   with_items:
-    - https://yum.dockerproject.org/repo/main/centos/7/Packages/docker-engine-selinux-1.13.1-1.el7.centos.noarch.rpm
-    - https://yum.dockerproject.org/repo/main/centos/7/Packages/docker-engine-1.13.1-1.el7.centos.x86_64.rpm
+    - yum-utils
+    - device-mapper-persistent-data
+    - lvm2
   tags:
   - setup
   - dockerrun
 
-- name: start docker
-  service: name=docker state=started enabled=yes
+# add docker.repo
+- name: add docker.repo
+  template:
+    src: docker-ce.repo.j2
+    dest: /etc/yum.repos.d/docker-ce.repo
+  tags:
+  - setup
+  - dockerrun
+
+- name: install docker
+  yum: name=docker-ce state=present
   tags:
   - setup
   - dockerrun
